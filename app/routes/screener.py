@@ -1,12 +1,12 @@
 from typing import List
 from fastapi import APIRouter
 from app.schemas import Person, PersonScreeningResult
-from app.services.screening_service import ScreeningService
+from app.services.ofac_screening_service import OfacScreeningService
 
 
 router = APIRouter()
-screening_service = ScreeningService()
 
 @router.post('/screen/', response_model=List[PersonScreeningResult])
 def screen_person(people: List[Person]):
-    return screening_service.get_screening_results(people)
+    ofac_screening_service = OfacScreeningService(people)
+    return ofac_screening_service.get_screening_results()

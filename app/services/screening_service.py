@@ -5,15 +5,16 @@ This module provides methods for the screening service
 from typing import Dict, List
 from app.schemas import Person, PersonScreeningResult
 from app.database import MongoDB
-from app.services.ofac_screening_service import OfacScreeningService
 
 
 class ScreeningService:
-    def __init__(self):
+    def __init__(self, people: List[Person]):
         self.db_client = MongoDB()
-        self.ofac_screening_service = OfacScreeningService()
+        self.people = people
+        self.person_map = self.__get_person_map()
 
-    def _get_person_map(self, people: List[Person]) -> Dict[int, Dict[str, str]]:
+    # Private methods
+    def __get_person_map(self) -> Dict[int, Dict[str, str]]:
         """
         Transforms a list of People into a dictionary where id is the key
 
@@ -21,7 +22,7 @@ class ScreeningService:
             people: A list of Person objects
         """
         person_map = {}
-        for person in people:
+        for person in self.people:
             person_map[person.id] = {
                 'name': person.name,
                 'dob': person.dob,
@@ -29,9 +30,9 @@ class ScreeningService:
             }
         return person_map
 
+    # Protected methods
     def _store_screening_results(
         self,
-        people: List[Person],
         person_screening_results: List[PersonScreeningResult]
     ) -> None:
         """
@@ -41,16 +42,13 @@ class ScreeningService:
             people: A list of Person objects
             person_screening_results: A list of screening results for each person
         """
-        operations = []
-        person_map = self._get_person_map(people)
-
         # bulk upsert every person's data to the person collection
+        operations = []
         for person_screening_result in person_screening_results:
             person_id = person_screening_result['id']
 
             # use the triple (name, dob, country) as the unique identifier
-            print(person_map)
-            filter_query = person_map[person_id]
+            filter_query = self.person_map[person_id]
 
             # combine the person's data with their screening results and store it
             # remove the ID as it is only used within the context of an instance
@@ -65,7 +63,8 @@ class ScreeningService:
 
         self.db_client.bulk_upsert_documents('person', operations)
 
-    def get_screening_results(self, people: List[Person]) -> List[PersonScreeningResult]:
+    # Public methods
+    def get_screening_results(self) -> List[PersonScreeningResult]:
         """
         Obtain the screening results for each person
 
@@ -75,10 +74,4 @@ class ScreeningService:
         Returns:
             A list of screening results for each person
         """
-        # get response from OFAC service
-        person_screening_results = self.ofac_screening_service.get_screening_results(people)
-
-        # store screening results in the database
-        self._store_screening_results(people, person_screening_results)
-
-        return person_screening_results
+        raise NotImplementedError("Subclasses must implement this method")
