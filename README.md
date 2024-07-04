@@ -1,5 +1,5 @@
 # SDN Screener Backend Service
-A Python FastAPI application that screens customer against the publicly available OFAC Specially Designated Nationals (SDN) [list](https://sanctionslist.ofac.treas.gov/Home/SdnList)
+A Python FastAPI application that screens customer against the publicly available OFAC Specially Designated Nationals (SDN) [list](https://sanctionslist.ofac.treas.gov/Home/SdnList).
 ## Instructions to run the service locally
 **Clone the repository**
 ```
