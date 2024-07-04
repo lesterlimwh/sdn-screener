@@ -1,14 +1,14 @@
 # SDN Screener Backend Service
-A Python FastAPI application that screens customer against the publicly available OFAC Specially Designated Nationals (SDN) [list](https://sanctionslist.ofac.treas.gov/Home/SdnList).
+A Python FastAPI application that screens a person against the publicly available OFAC Specially Designated Nationals (SDN) [list](https://sanctionslist.ofac.treas.gov/Home/SdnList).
 ## Instructions to run the service locally
 **Clone the repository**
 ```
 git clone https://github.com/lesterlimwh/sdn-screener.git
 ```
 **Set environment variables**
-```
-# .env
 
+Modify the following variables in the .env file
+```
 MONGO_INITDB_ROOT_USERNAME
 MONGO_INITDB_ROOT_PASSWORD
 OFAC_API_KEY
@@ -18,25 +18,6 @@ Sign up [here](https://www.ofac-api.com/account/sign-up) (free trial is ok) for 
 **Start the Docker container**
 ```
 docker-compose up --build
-
-http://localhost:8000/api/v1/screen
-```
-**Sample POST request**
-```
-[
-    {
-        "id": 1,
-        "name": "Ubaidullah Akhund Sher Mohammed",
-        "dob": "1950-01-01",
-        "country": "Afghanistan"
-    },
-    {
-        "id": 2,
-        "name": "Abu Abbas",
-        "dob": "1948-12-10",
-        "country": "Yemen"
-    }
-]
 ```
 
 ## Endpoints
@@ -62,6 +43,24 @@ API response format
         "name_match": bool,
         "dob_match": bool,
         "country_match": bool
+    }
+]
+```
+
+**Sample POST request body**
+```
+[
+    {
+        "id": 1,
+        "name": "Ubaidullah Akhund Sher Mohammed",
+        "dob": "1950-01-01",
+        "country": "Afghanistan"
+    },
+    {
+        "id": 2,
+        "name": "Abu Abbas",
+        "dob": "1948-12-10",
+        "country": "Yemen"
     }
 ]
 ```
