@@ -7,6 +7,7 @@ services:
       - "8000:8000"
     depends_on:
       - mongodb
+      - redis  # Add dependency on Redis service
 
   mongodb:
     image: mongo:latest
@@ -14,6 +15,14 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
 
 volumes:
   mongo-data:

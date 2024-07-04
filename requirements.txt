@@ -1,5 +1,7 @@
+aioredis==2.0.1
 annotated-types==0.7.0
 anyio==4.4.0
+async-timeout==4.0.3
 blinker==1.8.2
 certifi==2024.6.2
 charset-normalizer==3.3.2
@@ -9,6 +11,8 @@ email_validator==2.1.1
 exceptiongroup==1.2.1
 fastapi==0.111.0
 fastapi-cli==0.0.4
+fastapi-limiter==0.1.6
+fastapi-redis-rate-limiter==1.0.1
 h11==0.14.0
 httpcore==1.0.5
 httptools==0.6.1
@@ -33,6 +37,7 @@ pytest==8.2.2
 python-dotenv==1.0.1
 python-multipart==0.0.9
 PyYAML==6.0.1
+redis==5.1.0b7
 requests==2.32.3
 rich==13.7.1
 shellingham==1.5.4

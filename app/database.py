@@ -2,7 +2,8 @@ import os
 from typing import List, Dict, Any
 from datetime import datetime, timezone
 from dotenv import load_dotenv
-from pymongo import MongoClient, UpdateOne
+from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import UpdateOne
 from pymongo.results import InsertOneResult, UpdateResult, BulkWriteResult
 from pymongo.cursor import Cursor
 
@@ -12,9 +13,7 @@ class MongoDB:
         """
         Initialize the MongoDB client and database connection.
         """
-        load_dotenv()
-        self.mongo_uri = os.getenv("MONGO_URI")
-        self.client = MongoClient(self.mongo_uri)
+        self.client = AsyncIOMotorClient(self.get_mongo_uri())
         self.db = self.client["sdn_screener"]
 
     def close(self):
@@ -22,6 +21,15 @@ class MongoDB:
         Close the MongoDB client connection.
         """
         self.client.close()
+
+    def get_mongo_uri(self):
+        load_dotenv()
+        host = os.getenv("MONGO_HOST")
+        port = os.getenv("MONGO_PORT")
+        user = os.getenv("MONGO_INITDB_ROOT_USERNAME")
+        password = os.getenv("MONGO_INITDB_ROOT_PASSWORD")
+
+        return f'mongodb://{user}:{password}@{host}:{port}/'
 
     def get_collection(self, collection_name: str):
         """
@@ -35,14 +43,18 @@ class MongoDB:
         """
         return self.db[collection_name]
 
-    def find_documents(self, collection_name: str, query: Dict[str, Any]) -> Cursor:
+    async def find_documents(self, collection_name: str, query: Dict[str, Any]) -> Cursor:
         """
         Find documents in a collection
         """
         collection = self.get_collection(collection_name)
-        return collection.find(query)
+        return await collection.find(query)
 
-    def insert_document(self, collection_name: str, document: Dict[str, Any]) -> InsertOneResult:
+    async def insert_document(
+        self,
+        collection_name: str,
+        document: Dict[str, Any]
+    ) -> InsertOneResult:
         """
         Insert a document into a collection.
 
@@ -57,9 +69,9 @@ class MongoDB:
         document['created_at'] = current_time
         document['updated_at'] = current_time
         collection = self.get_collection(collection_name)
-        return collection.insert_one(document)
+        return await collection.insert_one(document)
 
-    def upsert_document(
+    async def upsert_document(
             self,
             collection_name: str,
             filter_query: Dict[str, Any],
@@ -83,10 +95,10 @@ class MongoDB:
             '$set': update_values,
             '$setOnInsert': { 'created_at': current_time }
         }
-        result = collection.update_one(filter_query, config, upsert=True)
+        result = await collection.update_one(filter_query, config, upsert=True)
         return result
 
-    def bulk_upsert_documents(
+    async def bulk_upsert_documents(
             self,
             collection_name: str,
             operations: List[Dict[str, Dict[str, Any]]]
@@ -117,5 +129,5 @@ class MongoDB:
             request = UpdateOne(operation['filter_query'], config, upsert=True)
             write_requests.append(request)
 
-        result = collection.bulk_write(write_requests)
+        result = await collection.bulk_write(write_requests)
         return result

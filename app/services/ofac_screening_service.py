@@ -11,8 +11,8 @@ from app.services.screening_service import ScreeningService
 
 
 class OfacScreeningService(ScreeningService):
-    # Set default timeout to 5 seconds
-    OFAC_API_TIMEOUT = 5
+    # Set default timeout to 10 seconds
+    OFAC_API_TIMEOUT = 10
 
     class OfacScreeningServiceError(Exception):
         def __init__(self, message):
@@ -47,7 +47,9 @@ class OfacScreeningService(ScreeningService):
             field_name = match_field.get('fieldName')
             if field_name == 'Name':
                 person_screening_result['name_match'] = True
-            elif field_name == "DOB":
+                continue
+
+            if field_name == "DOB":
                 person_screening_result['dob_match'] = True
 
     def __update_country_match(
@@ -86,7 +88,7 @@ class OfacScreeningService(ScreeningService):
                 person_screening_result['country_match'] = True
                 return
 
-    def __get_ofac_screening_response(self) -> Dict:
+    def __get_ofac_screening_response(self, people: List[Person]) -> Dict:
         """
         Makes a POST request to the OFAC API endpoint
         to obtain screening results for each person
@@ -100,7 +102,7 @@ class OfacScreeningService(ScreeningService):
         """
         # construct a case for each person
         cases = []
-        for person in self.people:
+        for person in people:
             case = {
                 'id': person.id,
                 'name': person.name,
@@ -139,7 +141,10 @@ class OfacScreeningService(ScreeningService):
             print(f"Failed to reach the OFAC API: {err}")
             raise err
 
-    def __transform_ofac_screening_response(self) -> List[PersonScreeningResult]:
+    def __transform_ofac_screening_response(
+        self,
+        people: List[Person]
+    ) -> List[PersonScreeningResult]:
         """
         Transforms the OFAC screening response into a list of PersonScreeningResults 
 
@@ -149,7 +154,7 @@ class OfacScreeningService(ScreeningService):
         Returns:
             A list of PersonScreeningResults
         """
-        response = self.__get_ofac_screening_response()
+        response = self.__get_ofac_screening_response(people)
         if response['error']:
             raise self.OfacScreeningServiceError(f"OFAC API error: {response['errorMessage']}")
 
@@ -179,15 +184,22 @@ class OfacScreeningService(ScreeningService):
 
             person_screening_results.append(person_screening_result)
 
-        self._store_screening_results(person_screening_results)
         return person_screening_results
 
     # Public methods
-    def get_screening_results(self) -> List[PersonScreeningResult]:
-        # check cache for recently accessed screening results
-        # if cache hit...
+    async def get_screening_results(self) -> List[PersonScreeningResult]:
+        # get the results from people who were recently screened
+        # and the people who were not recently screened
+        cache_misses, cache_person_screening_results = await self._get_recently_screened_people()
 
-        # cache miss
-        screening_results = self.__transform_ofac_screening_response()
-        self._store_screening_results(screening_results)
-        return screening_results
+        # only process the people who were not recently screened
+        person_screening_results = self.__transform_ofac_screening_response(cache_misses)
+
+        # update the redis cache with fresh screening results
+        await self._update_screening_results_cache(person_screening_results)
+
+        # store resuls in the database
+        await self._store_screening_results(person_screening_results)
+
+        # return the combined results
+        return cache_person_screening_results + person_screening_results
