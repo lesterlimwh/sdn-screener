@@ -1,5 +1,5 @@
 # SDN Screener Backend Service
----
+A Python FastAPI application that screens customer against the publicly available OFAC Specially Designated Nationals (SDN) [list](https://sanctionslist.ofac.treas.gov/Home/SdnList)
 ## Instructions to run the service locally
 **Clone the repository**
 ```
@@ -13,7 +13,8 @@ MONGO_INITDB_ROOT_USERNAME
 MONGO_INITDB_ROOT_PASSWORD
 OFAC_API_KEY
 ```
-Sign up (here)[https://www.ofac-api.com/account/sign-up] (free trial is ok) for the OFAC API key.
+Sign up [here](https://www.ofac-api.com/account/sign-up) (free trial is ok) for the OFAC API key.
+
 **Start the Docker container**
 ```
 docker-compose up --build
@@ -41,9 +42,8 @@ http://localhost:8000/api/v1/screen
 ## Endpoints
 http://localhost:8000/api/v1/screen
 
+API request format
 ```
-API Request
-
 [
     {
         "id": int,
@@ -52,9 +52,10 @@ API Request
         "country": string
     }
 ]
+```
 
-API Response
-
+API response format
+```
 [
     {
         "id": int,
