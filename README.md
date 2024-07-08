@@ -65,6 +65,12 @@ API response format
 ]
 ```
 
+## Unit tests
+After starting the docker container, run the following from the root directory.
+```
+pytest tests
+```
+
 ## Modifications / Improvements
 - Requires *full date of birth* instead of just the birth year
     - This is due to OFAC API constraints (it seems to use strict matching for dob)
